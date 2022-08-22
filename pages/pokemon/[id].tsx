@@ -8,6 +8,8 @@ import { getPokemonInfo, localFavorites } from "../../utils"
 
 import confetti from 'canvas-confetti'
 
+// esta pagina tiene incremental static generation ISG, para que se rendericen nuevos pokemons (en produccion) que no estan definidos estaticamente
+
 interface Props {
   pokemon: Pokemon
 }
@@ -67,7 +69,7 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
             <Card.Body>
               <Text size={ 30 }> Sprites: </Text>
 
-              <Container display="flex" direction="row" >
+              <Container display="flex" direction="row" > 
                 <Image
                   src={ pokemon.sprites.front_default }
                   alt={ pokemon.name }
@@ -117,7 +119,8 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     // fallback: "blocking" // el "blocking" deja que se ingrese a las rutas que no están definidas en paths
 
     paths: pokemons151,
-    fallback: false // asi da un 404
+    // fallback: false // asi da un 404
+    fallback: 'blocking'
   }
 }
 
@@ -128,10 +131,20 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   
   const pokemon = await getPokemonInfo( id )
 
+  if (!pokemon) {
+    return {
+      redirect:{
+        destination: '/',
+        permanent: false
+      }
+    }
+  }
+
   return {
     props: {
       pokemon,
-    }
+    },
+    revalidate: 10 // la pagina se revalida cada 10 segundos
   }
 }
 
